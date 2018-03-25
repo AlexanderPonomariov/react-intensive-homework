@@ -1,6 +1,7 @@
 // Core
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { CSSTransition, TransitionGroup, Transition } from 'react-transition-group';
 
 // Components
 import Task from '../Task';
@@ -17,10 +18,10 @@ export default class Scheduler extends Component {
     };
 
     state= {
-        tasks:            [],
-        taskMessage:      '',
-        isAllTasksClosed: false,
-        filterString:     '',
+        tasks:                [],
+        taskMessage:          '',
+        isAllTasksCompleated: false,
+        filterString:         '',
     };
 
     componentDidMount () {
@@ -57,8 +58,9 @@ export default class Scheduler extends Component {
             }
 
             this.setState(() => ({
-                tasks:       [messageObj, ...tasks],
-                taskMessage: '',
+                tasks:                [messageObj, ...tasks],
+                taskMessage:          '',
+                isAllTasksCompleated: false,
             }));
 
         } catch ({ message }) {
@@ -105,15 +107,21 @@ export default class Scheduler extends Component {
 
             // const { data: messageObj, status } = await response.json();
             const responseResult = await response;
-            const { data: messageObj } = await responseResult.json();
+            // const { data: messageObj } = await responseResult.json();
 
             if (responseResult.status !== 200) {
-                throw new Error('Creating task failed');
+                throw new Error('Editing task failed');
             }
 
             this.setState(({ tasks }) => ({
                 tasks: tasks.map((task) => task.id === id ? newMessage : task),
             }));
+
+            if (!completed) {
+                this.setState(() => ({
+                    isAllTasksCompleated: false,
+                }));
+            }
 
         } catch ({ message }) {
             console.error(message);
@@ -121,7 +129,7 @@ export default class Scheduler extends Component {
     };
 
     _getTaskMessage = ({ target: { value }}) => {
-        if (value.trim().length >= 46) {
+        if (value.length >= 46) {
             return false;
         }
 
@@ -129,6 +137,7 @@ export default class Scheduler extends Component {
             taskMessage: value,
         }));
     };
+
     _getFilterString = ({ target: { value }}) => {
         // if (value.trim().length >= 46) {
         //     return false;
@@ -162,9 +171,54 @@ export default class Scheduler extends Component {
         }));
     };
 
+    _setAllTasksFinished = async () => {
+        const { api, token } = this.context;
+        const { tasks, isAllTasksCompleated } = this.state;
+
+        if (isAllTasksCompleated) {
+            return false;
+        }
+
+        const completedTasks = tasks.map((task) => {
+            task.completed = true;
+
+            return task;
+        });
+
+        console.log(completedTasks);
+
+        try {
+
+            const response = await fetch(`${api}`, {
+                method:  'PUT',
+                headers: {
+                    'Authorization': token,
+                    'Content-Type':  'application/json',
+                },
+                body: JSON.stringify(completedTasks),
+            });
+
+            // const { data: messageObj, status } = await response.json();
+            const responseResult = await response;
+            // const { data: messageObj } = await responseResult.json();
+
+            if (responseResult.status !== 200) {
+                throw new Error('Completing all tasks failed');
+            }
+
+            this.setState(() => ({
+                tasks:                completedTasks,
+                isAllTasksCompleated: true,
+            }));
+
+        } catch ({ message }) {
+            console.error(message);
+        }
+    };
+
     render () {
         // const { checkboxBorderColor, checkboxBackgroundColor } = this.context;
-        const { tasks: tasksArr, taskMessage, filterString } = this.state;
+        const { tasks: tasksArr, taskMessage, filterString, isAllTasksCompleated } = this.state;
 
         const tasksArrFiltered = tasksArr.filter((task) => task.message.indexOf(filterString)!==-1);
 
@@ -230,8 +284,10 @@ export default class Scheduler extends Component {
                     <footer>
                         <div className = { Styles.code }>
                             <Checkbox
+                                checked = { isAllTasksCompleated }
                                 color1 = { '#000' }
                                 color2 = { '#f5f5f5' }
+                                onClick = { this._setAllTasksFinished }
                             />
                             <span>Все задачи выполнены</span>
                         </div>

@@ -4,7 +4,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     background-color: $paletteColor3;
     user-select: none;
     -webkit-user-select: none;
@@ -13,11 +13,12 @@
         width: 96rem;
         min-height: 66rem;
         padding: 5.2rem 8.4rem 5.4rem;
-        max-height: 90vh;
+        //max-height: 90vh;
         max-width: 90vw;
         background-color: $paletteColor4;
         border-radius: 1rem;
         box-shadow: 0 0.6rem 1.4rem 0.1rem $rgbaColor2;
+        margin: 70px auto;
 
         input:not([type='checkbox']) {
             height: 4.2rem;

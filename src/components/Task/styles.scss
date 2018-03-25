@@ -32,6 +32,7 @@
         & input {
             width: 100%;
             border: 0;
+            margin-bottom: -1.3rem;
         }
     }
 
@@ -39,6 +40,9 @@
         & span {
             margin-left: 1.7rem;
         }
+    }
+    & div form input {
+        margin-bottom: -1.3rem;
     }
 }
 

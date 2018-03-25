@@ -35,10 +35,10 @@ export default class Task extends Component {
     _cancelChanges = (event) => {
         const { message } = this.props;
 
-        if(event.keyCode === 27) {
+        if (event.keyCode === 27) {
             this.setState(({ isEdited }) => ({
                 taskMessage: message,
-                isEdited: !isEdited
+                isEdited:    !isEdited,
             }));
         }
     };
@@ -70,7 +70,8 @@ export default class Task extends Component {
     };
 
     _getTaskMessage = ({ target: { value }}) => {
-        if (value.trim().length >= 46) {
+        console.log(value.trim().length);
+        if (value.length >= 46) {
             return false;
         }
 
@@ -113,10 +114,10 @@ export default class Task extends Component {
                     {isEdited ? (
                         <form onSubmit = { this._editMessage }>
                             <input
-                                defaultValue = { taskMessage }
-                                type = 'text'
                                 onChange = { this._getTaskMessage }
                                 onKeyDown = { this._cancelChanges }
+                                type = 'text'
+                                value = { taskMessage }
                             />
                         </form>
                     ) : (
