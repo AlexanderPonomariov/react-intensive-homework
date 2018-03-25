@@ -104,6 +104,7 @@
                 padding: 0;
                 max-height: 37rem;
                 overflow: scroll;
+                margin: 0;
             }
         }
 
@@ -115,7 +116,7 @@
                 cursor: pointer;
             }
 
-            & code {
+            & .code {
                 font-size: 2rem;
                 letter-spacing: .1rem;
                 color: $paletteColor7;
