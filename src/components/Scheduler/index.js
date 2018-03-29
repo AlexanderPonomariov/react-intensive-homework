@@ -1,7 +1,8 @@
 // Core
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import { CSSTransition, TransitionGroup, Transition } from 'react-transition-group';
+import { TransitionGroup, Transition } from 'react-transition-group';
+import { fromTo } from 'gsap';
 
 // Components
 import Task from '../Task';
@@ -90,7 +91,6 @@ export default class Scheduler extends Component {
     };
 
     _editMessage = async (id, message, completed, favorite) => {
-
         const { api, token } = this.context;
         const newMessage = { id, message, completed, favorite };
 
@@ -105,9 +105,7 @@ export default class Scheduler extends Component {
                 body: JSON.stringify([newMessage]),
             });
 
-            // const { data: messageObj, status } = await response.json();
             const responseResult = await response;
-            // const { data: messageObj } = await responseResult.json();
 
             if (responseResult.status !== 200) {
                 throw new Error('Editing task failed');
@@ -123,8 +121,8 @@ export default class Scheduler extends Component {
                 }));
             }
 
-        } catch ({ message }) {
-            console.error(message);
+        } catch ({ message: errMessage }) {
+            console.error(errMessage);
         }
     };
 
@@ -139,10 +137,6 @@ export default class Scheduler extends Component {
     };
 
     _getFilterString = ({ target: { value }}) => {
-        // if (value.trim().length >= 46) {
-        //     return false;
-        // }
-
         this.setState(() => ({
             filterString: value,
         }));
@@ -185,8 +179,6 @@ export default class Scheduler extends Component {
             return task;
         });
 
-        console.log(completedTasks);
-
         try {
 
             const response = await fetch(`${api}`, {
@@ -198,9 +190,7 @@ export default class Scheduler extends Component {
                 body: JSON.stringify(completedTasks),
             });
 
-            // const { data: messageObj, status } = await response.json();
             const responseResult = await response;
-            // const { data: messageObj } = await responseResult.json();
 
             if (responseResult.status !== 200) {
                 throw new Error('Completing all tasks failed');
@@ -216,46 +206,86 @@ export default class Scheduler extends Component {
         }
     };
 
+    _handleTaskAppear = (task) => {
+        fromTo(
+            task,
+            2,
+            {
+                y:       100,
+                x:       100,
+                opacity: 0,
+            }, {
+                y:       0,
+                x:       0,
+                opacity: 1,
+            }
+        );
+
+    };
+
+    _handleTaskDissappear = (task) => {
+        fromTo(
+            task,
+            2,
+            {
+                opacity: 1,
+            }, {
+                opacity: 0,
+                height:  0,
+                margin:  0,
+                padding: 0,
+            }
+        );
+    };
+
     render () {
-        // const { checkboxBorderColor, checkboxBackgroundColor } = this.context;
         const { tasks: tasksArr, taskMessage, filterString, isAllTasksCompleated } = this.state;
 
         const tasksArrFiltered = tasksArr.filter((task) => task.message.indexOf(filterString)!==-1);
 
         const tasksArrFavorite = tasksArrFiltered.filter((task) => task.favorite && !task.completed).map((task) => (
-            <Task
+            <Transition
+                appear
                 key = { task.id }
-                { ...task }
-                deleteMessage = { this._deleteMessage }
-                editMessage = { this._editMessage }
-            />
+                timeout = { 2000 }
+                onEnter = { this._handleTaskAppear }
+                onExit = { this._handleTaskDissappear }>
+                <Task
+                    { ...task }
+                    deleteMessage = { this._deleteMessage }
+                    editMessage = { this._editMessage }
+                />
+            </Transition>
         ));
 
         const tasksArrSimple = tasksArrFiltered.filter((task) => !task.favorite && !task.completed).map((task) => (
-            <Task
+            <Transition
+                appear
                 key = { task.id }
-                { ...task }
-                deleteMessage = { this._deleteMessage }
-                editMessage = { this._editMessage }
-            />
+                timeout = { 2000 }
+                onEnter = { this._handleTaskAppear }
+                onExit = { this._handleTaskDissappear }>
+                <Task
+                    { ...task }
+                    deleteMessage = { this._deleteMessage }
+                    editMessage = { this._editMessage }
+                />
+            </Transition>
         ));
         const tasksArrCompleated = tasksArrFiltered.filter((task) => task.completed).map((task) => (
-            <Task
+            <Transition
+                appear
                 key = { task.id }
-                { ...task }
-                deleteMessage = { this._deleteMessage }
-                editMessage = { this._editMessage }
-            />
+                timeout = { 2000 }
+                onEnter = { this._handleTaskAppear }
+                onExit = { this._handleTaskDissappear }>
+                <Task
+                    { ...task }
+                    deleteMessage = { this._deleteMessage }
+                    editMessage = { this._editMessage }
+                />
+            </Transition>
         ));
-
-        // const tasks = [...tasksArrSimple, ...tasksArrFavorite].map((task) => (
-        //     <Task
-        //         key = { task.id }
-        //         { ...task }
-        //         deleteMessage = { this._deleteMessage }
-        //         editMessage = { this._editMessage }
-        //     />
-        // ));
 
         return (
             <section className = { Styles.scheduler }>
@@ -277,9 +307,11 @@ export default class Scheduler extends Component {
                         </form>
                     </section>
                     <section>
-                        { tasksArrFavorite }
-                        { tasksArrSimple }
-                        { tasksArrCompleated }
+                        <TransitionGroup>
+                            { tasksArrFavorite }
+                            { tasksArrSimple }
+                            { tasksArrCompleated }
+                        </TransitionGroup>
                     </section>
                     <footer>
                         <div className = { Styles.code }>

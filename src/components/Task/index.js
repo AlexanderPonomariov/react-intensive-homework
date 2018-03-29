@@ -1,6 +1,7 @@
 // Core
 import React, { Component } from 'react';
 import Styles from './styles.scss';
+import PropTypes from 'prop-types';
 
 // Components
 import Checkbox from '../../theme/assets/Checkbox';
@@ -9,6 +10,20 @@ import Edit from '../../theme/assets/Edit';
 import Star from '../../theme/assets/Star';
 
 export default class Task extends Component {
+    static propTypes = {
+        deleteMessage: PropTypes.func.isRequired,
+        editMessage:   PropTypes.func.isRequired,
+        id:            PropTypes.string.isRequired,
+        message:       PropTypes.string.isRequired,
+        completed:     PropTypes.bool,
+        favorite:      PropTypes.bool,
+    };
+
+    static defaultProps = {
+        completed: false,
+        favorite:  false,
+    };
+
     state = {
         isEdited:    false,
         taskMessage: this.props.message,
@@ -70,7 +85,6 @@ export default class Task extends Component {
     };
 
     _getTaskMessage = ({ target: { value }}) => {
-        console.log(value.trim().length);
         if (value.length >= 46) {
             return false;
         }
@@ -84,15 +98,20 @@ export default class Task extends Component {
         const { taskMessage, completed, favorite } = this.state;
         const { id, editMessage, message } = this.props;
 
-        console.log(taskMessage.trim().length);
+        try {
+            if (taskMessage.trim().length >= 46 || taskMessage.trim().length < 3) {
+                this.setState(() => ({
+                    taskMessage: message,
+                }));
 
-        if (taskMessage.trim().length >= 46) {
-            console.log(taskMessage.trim().length);
+                throw new Error('Wrong message length');
+            }
 
-            return false;
+            editMessage(id, taskMessage.trim(), completed, favorite);
+
+        } catch ({ message: errMessage }) {
+            console.error(errMessage);
         }
-
-        editMessage(id, taskMessage.trim(), completed, favorite);
     };
 
     render () {
@@ -104,20 +123,20 @@ export default class Task extends Component {
 
         return (
             <li className = { taskClass }>
-                <Checkbox
-                    color1 = { '#000' }
-                    color2 = { '#fff' }
-                    onClick = { this._changeMessageState }
-                    checked = { completed }
-                />
                 <div>
+                    <Checkbox
+                        checked = { completed }
+                        color1 = { '#000' }
+                        color2 = { '#fff' }
+                        onClick = { this._changeMessageState }
+                    />
                     {isEdited ? (
                         <form onSubmit = { this._editMessage }>
                             <input
-                                onChange = { this._getTaskMessage }
-                                onKeyDown = { this._cancelChanges }
                                 type = 'text'
                                 value = { taskMessage }
+                                onChange = { this._getTaskMessage }
+                                onKeyDown = { this._cancelChanges }
                             />
                         </form>
                     ) : (
@@ -128,7 +147,7 @@ export default class Task extends Component {
                 <div>
                     <Star checked = { favorite } onClick = { this._changeMessageStatus } />
                     {isEdited ? (
-                        <Edit onClick = { this._editMessage } hover = { isEdited } />
+                        <Edit hover = { isEdited } onClick = { this._editMessage } />
                     ) : (
                         <Edit onClick = { this._isEditedMessage } />
                     )}
